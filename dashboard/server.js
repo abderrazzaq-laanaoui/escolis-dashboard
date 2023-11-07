@@ -6,10 +6,10 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const csrf = require("csurf");
-const csurfProtection = csrf({ cookie: true });
+const csrfProtection = csrf({ cookie: true });
 const rateLimit = require("express-rate-limit");
 
-const port =8001;
+const port = 8000;
 // (A) EXPRESS 
 const app = express();
 
@@ -38,6 +38,10 @@ app.use(express.urlencoded({extended : true}))
 // Middleware for parsing cookies
 app.use(cookieParser());
 
+
+// Set EJS as a template engine
+app.set("view engine", "ejs");
+
 const users = [
   {
     email: "example@etud.univ-ubs.fr",
@@ -51,20 +55,29 @@ const limiter = rateLimit({
   max: 100, // Limit each IP to 100 requests per windowMs
 });
 app.use(limiter);
-
+app.use(csrfProtection);
+const Tokensarray = [];
 // (B) HOME PAGE - OPEN TO ALL
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  const csrfToken = req.csrfToken();
+  //console.log(csrfToken);
+  Tokensarray.push(csrfToken)
+  res.render("index", { csrfToken });
 });
  
 // (D5) LOGIN ENDPOINT
-app.post("/api/v1/auth/user-auth", (req, res) => {
-  const { email, password} = req.body;
-  
+app.post("/api/v1/auth/user-auth",csrfProtection, (req, res) => {
+  const { email, password, _csrf} = req.body;
+  //console.log(_csrf);
+  const csrf = Tokensarray[0];
+  //console.log(csrf)
+  const index = Tokensarray.indexOf(_csrf);
   // Verify CSRF token
-  // if (_csrf !== req.csrfToken()) {
-  //   return res.status(403).json({ message: "CSRF token mismatch" });
-  // }
+  if (index <0) {
+    return res.status(403).json({ message: "CSRF token mismatch" });
+  }
+  delete Tokensarray[index];
+  //console.log(Tokensarray)
   // Find the user by matching the provided email
   const user = users.find((u) => u.email === email);
 
