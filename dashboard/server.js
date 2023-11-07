@@ -1,16 +1,37 @@
 // (A) INITIALIZE
 // (A1) LOAD REQUIRED MODULES
-// npm i bcryptjs express body-parser cookie-parser multer jsonwebtoken
+// npm i path express cookie-parser helmet csurf express-rate-limit
 const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
 const csrf = require("csurf");
 const csurfProtection = csrf({ cookie: true });
+const rateLimit = require("express-rate-limit");
 
 const port =8001;
 // (A) EXPRESS 
 const app = express();
+
+// Enable various security headers
+app.use(helmet());
+
+// Enable HSTS
+app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
+
+// Prevent content type sniffing
+app.use(helmet.noSniff());
+
+// Prevent framing of your site
+app.use(helmet.frameguard({ action: "sameorigin" }));
+
+// Enable XSS filter
+app.use(helmet.xssFilter());
+
+// Serve static files
 app.use(express.static(__dirname));
+
+// Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({extended : true}))
 
@@ -23,6 +44,13 @@ const users = [
     password: "password123", // Exemple to do the demo
   },
 ];
+
+// Rate limiting to protect against brute force attacks and DoS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 
 // (B) HOME PAGE - OPEN TO ALL
 app.get("/", (req, res) => {
