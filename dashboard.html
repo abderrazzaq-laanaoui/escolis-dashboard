@@ -2,9 +2,9 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Navside Dashboard</title>
+  <title> Dashboard</title>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'><link rel="stylesheet" href="./style.css">
-
+  
 </head>
 <!-- partial:index.partial.html -->
 <div id="nav-bar">
@@ -14,9 +14,9 @@
     <hr/>
   </div>
   <div id="nav-content">
-    <div class="nav-button"><i class="fas fa-chart-line"> </i> <a href="https://www-ensibs.univ-ubs.fr/fr/index.html" target="iframe"><span>Service Soutenance</span></a></div>
+    <!-- <div class="nav-button"><i class="fas fa-chart-line"> </i> <a href="https://www-ensibs.univ-ubs.fr/fr/index.html" target="iframe"><span>Service Soutenance</span></a></div>
     <div class="nav-button"><i class="fas fa-fire"></i><a href="https://ent.univ-ubs.fr/uPortal/render.userLayoutRootNode.uP" target="iframe"><span>Service Alternances</span> </a></div>
-    <div class="nav-button"><i class="fas fa-magic"></i><a href="https://www.univ-ubs.fr/fr/index.html" target="iframe"><span>Service Absences</span> </a></div>
+    <div class="nav-button"><i class="fas fa-magic"></i><a href="https://www.univ-ubs.fr/fr/index.html" target="iframe"><span>Service Absences</span> </a></div> -->
     <div id="nav-content-highlight"></div>
   </div>
   <input id="nav-footer-toggle" type="checkbox"/>
@@ -34,18 +34,12 @@
 </div>
 
 <div id="content-container">
-  <!-- <div id="content-text">
-      <img src="images/ensibs_logo_color.png" alt="Logo ENSIBS">
-  </div> -->
-
   <iframe name="iframe"  frameborder="0" allowfullscreen></iframe>
 </div>
 
-<script>
-  function changeContent(content) {
-    document.getElementById("content-text").textContent = content;
-  }
-</script>
+
+<script src="data.js"></script>
+  <script src="script.js"></script>
   
 </body>
 </html>
