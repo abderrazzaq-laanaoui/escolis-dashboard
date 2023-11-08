@@ -7,6 +7,30 @@
         return emailPattern.test(email);
     }
 
+    // Function to sanitize input
+    function sanitizeInput(input) {
+        // Remove leading and trailing whitespace
+        //input = input.trim();
+        
+        // Create a pattern to match any of the disallowed tags
+        const disallowedTags = ['script', 'iframe', 'img', 'br', 'hr', 'area', 'base', 'basefont', 'input', 'link', 'meta'];
+        const disallowedPattern = new RegExp(
+            `<(${disallowedTags.join('|')})\\b[^<]*(?:(?!</\\1>)<[^<]*)*</\\1>`,
+            'gi'
+        );
+        console.log(input);
+
+        // Remove content between disallowed tags
+        input = input.replace(disallowedPattern, '');
+        console.log(input);
+
+        // Prevent XSS by escaping HTML entities
+        input = input.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+        console.log(input);
+        return input;
+      }
+    
     /*==================================================================
     [ Focus Contact2 ]*/
     $('.input100').each(function() {
@@ -44,16 +68,15 @@
 
         if (check) {
             // Form data is valid, proceed with sending it to the server
-            var email = $('input[name="email"]').val();
-            var password = $('input[name="pass"]').val();
+            var email = sanitizeInput($('input[name="email"]').val());
+            var password = sanitizeInput($('input[name="pass"]').val());
             var csrfToken = $('input[name="_csrf"]').val(); // Get the CSRF token from the hidden input
-     
+            
             // Create a data object to send as JSON
             var data = {
                 email: email,
                 password: password,
                 _csrf: csrfToken // Include the CSRF token in the data
-
             };
 
             // Make an AJAX POST request to your authentication endpoint

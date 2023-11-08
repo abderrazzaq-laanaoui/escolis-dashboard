@@ -14,6 +14,7 @@ const port = 8000;
 const app = express();
 
 // Enable various security headers
+//app.use(helmet());
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -41,7 +42,8 @@ app.use(helmet.frameguard({ action: "sameorigin" }));
 app.use(helmet.xssFilter());
 
 // Serve static files
-app.use(express.static(__dirname+"/public"));
+app.use(express.static(__dirname+'/public'));
+
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -79,9 +81,11 @@ app.get("/", (req, res) => {
 });
  
 // (D5) LOGIN ENDPOINT
-app.post("/api/v1/auth/user-auth",csrfProtection, (req, res) => {
+app.post("/api/v1/auth/user-auth", (req, res) => {
   const { email, password, _csrf} = req.body;
-  //console.log(_csrf);
+  console.log(email);
+  console.log(password);
+  console.log(_csrf);
   const index = Tokensarray.indexOf(_csrf);
   // Verify CSRF token
   if (index <0) {
