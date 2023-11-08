@@ -65,6 +65,8 @@
                 success: function (response) {
                     // Handle a successful authentication response here
                     console.log('Authentication successful:', response);
+                    // Redirect to the dashboard page
+                    window.location.href = '/dashboard';
                 },
                 error: function (xhr, textStatus, error) {
                     // Handle errors here

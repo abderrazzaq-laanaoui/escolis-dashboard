@@ -14,7 +14,19 @@ const port = 8000;
 const app = express();
 
 // Enable various security headers
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "ajax.googleapis.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "gravatar.com"],
+      frameSrc: ["'self'", "https://ent.univ-ubs.fr", "https://www-ensibs.univ-ubs.fr","https://www.univ-ubs.fr"],
+      connectSrc: ["'self'"],
+    },
+  })
+);
 
 // Enable HSTS
 app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true, preload: true }));
@@ -29,7 +41,7 @@ app.use(helmet.frameguard({ action: "sameorigin" }));
 app.use(helmet.xssFilter());
 
 // Serve static files
-app.use(express.static(__dirname));
+app.use(express.static(__dirname+"/public"));
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
@@ -56,7 +68,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(csrfProtection);
-const Tokensarray = [];
+
+let Tokensarray = [];
 // (B) HOME PAGE - OPEN TO ALL
 app.get("/", (req, res) => {
   const csrfToken = req.csrfToken();
@@ -69,20 +82,19 @@ app.get("/", (req, res) => {
 app.post("/api/v1/auth/user-auth",csrfProtection, (req, res) => {
   const { email, password, _csrf} = req.body;
   //console.log(_csrf);
-  const csrf = Tokensarray[0];
-  //console.log(csrf)
   const index = Tokensarray.indexOf(_csrf);
   // Verify CSRF token
   if (index <0) {
     return res.status(403).json({ message: "CSRF token mismatch" });
   }
-  delete Tokensarray[index];
+  //Remove the used token from our array
+  Tokensarray = Tokensarray.filter(it =>it !=_csrf);
   //console.log(Tokensarray)
   // Find the user by matching the provided email
   const user = users.find((u) => u.email === email);
 
   if (user) {
-    // Compare the provided plaintext password with the stored password
+    // Compare the provided password with the stored password
     if (user.password === password) {
       res.status(200).json({ message: "Authentication successful" });
     } else {
@@ -91,6 +103,12 @@ app.post("/api/v1/auth/user-auth",csrfProtection, (req, res) => {
   } else {
     res.status(401).json({ message: "User not found" });
   }
+});
+
+app.get("/dashboard", (req, res) => {
+  // Render the dashboard page
+  //res.render("dashboard");
+  res.sendFile(path.join(__dirname, "./public/dashboard.html")); 
 });
 
 app.listen(port, () => {
