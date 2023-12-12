@@ -1,12 +1,14 @@
 // (A) INITIALIZE
 // (A1) LOAD REQUIRED MODULES
-// npm i path express cookie-parser helmet csurf express-rate-limit
+// npm i path express cookie-parser helmet csurf express-rate-limit bcrypt
 const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const csrf = require("csurf");
 const csrfProtection = csrf({ cookie: true });
+const bcrypt = require('bcrypt');
+const saltRounds = 10; // Cost factor for the bcrypt algorithm
 //const doubleCsrf = require("csrf-csrf");
 // const { generateToken, // Use this in your routes to provide a CSRF hash + token cookie and token.
 //   validateRequest, // Also a convenience if you plan on making your own middleware.
@@ -67,7 +69,8 @@ app.set("view engine", "ejs");
 const users = [
   {
     email: "example@etud.univ-ubs.fr",
-    password: "password123", // Exemple to do the demo
+    //password: "password123", // Exemple to do the demo
+    password: bcrypt.hashSync("password123", saltRounds), // This should be on the serverside
   },
 ];
 
@@ -91,9 +94,9 @@ app.get("/", (req, res) => {
 // (D5) LOGIN ENDPOINT
 app.post("/api/v1/auth/user-auth", (req, res) => {
   const { email, password, _csrf} = req.body;
-  console.log(email);
-  console.log(password);
-  console.log(_csrf);
+  //console.log(email);
+  //console.log(password);
+  //console.log(_csrf);
   const index = Tokensarray.indexOf(_csrf);
   // Verify CSRF token
   if (index <0) {
@@ -107,12 +110,14 @@ app.post("/api/v1/auth/user-auth", (req, res) => {
 
   if (user) {
     // Compare the provided password with the stored password
-    if (user.password === password) {
-      res.status(200).json({ message: "Authentication successful" });
-    } else {
-      res.status(401).json({ message: "Invalid email/password combination" });
-    }
-  } else {
+    bcrypt.compare(password, user.password, (err, result) =>{
+      if (result) {
+        res.status(200).json({ message: "Authentication successful" });
+      } else {
+        res.status(401).json({ message: "Invalid email/password combination" });
+      }
+    });
+  }else {
     res.status(401).json({ message: "User not found" });
   }
 });
