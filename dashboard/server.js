@@ -7,11 +7,19 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const csrf = require("csurf");
 const csrfProtection = csrf({ cookie: true });
+//const doubleCsrf = require("csrf-csrf");
+// const { generateToken, // Use this in your routes to provide a CSRF hash + token cookie and token.
+//   validateRequest, // Also a convenience if you plan on making your own middleware.
+//   doubleCsrfProtection, // This is the default CSRF protection middleware.
+// } = doubleCsrf();
 const rateLimit = require("express-rate-limit");
 
 const port = 8000;
 // (A) EXPRESS 
 const app = express();
+// express.use(session);
+// express.get("/csrf-token", myRoute);
+// express.use(doubleCsrfProtection);
 
 // Enable various security headers
 //app.use(helmet());
@@ -75,7 +83,7 @@ let Tokensarray = [];
 // (B) HOME PAGE - OPEN TO ALL
 app.get("/", (req, res) => {
   const csrfToken = req.csrfToken();
-  //console.log(csrfToken);
+  //const csrfToken = generateToken(req, res);
   Tokensarray.push(csrfToken)
   res.render("index", { csrfToken });
 });
