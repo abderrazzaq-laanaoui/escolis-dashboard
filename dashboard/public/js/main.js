@@ -85,7 +85,7 @@
                 url: '/api/v1/auth/user-auth', // Update this URL if needed
                 data: JSON.stringify(data),
                 contentType: 'application/json',
-                success: function (response) {
+                success: function (response) {  
                     // Handle a successful authentication response here
                     console.log('Authentication successful:', response);
                     // Redirect to the dashboard page

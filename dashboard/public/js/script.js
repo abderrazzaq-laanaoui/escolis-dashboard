@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", function() {
     // Récupérer la div avec l'id "nav-content"
     const navContent = document.getElementById("nav-content");
+ // deconnect when the button with id docBtn is clicked
+    const docBtn = document.getElementById("decoBtn");
+    docBtn.addEventListener("click", function() {
+        window.location.href = "/";
+    });
 
     // Recuperer les Données des services
     const services = [

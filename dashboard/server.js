@@ -33,7 +33,7 @@ app.use(
       styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
       imgSrc: ["'self'", "data:", "gravatar.com"],
-      frameSrc: ["'self'", "https://ent.univ-ubs.fr", "https://www-ensibs.univ-ubs.fr","https://www.univ-ubs.fr"],
+      frameSrc: ["'self'", "https://ent.univ-ubs.fr", "https://www-ensibs.univ-ubs.fr", "https://www.univ-ubs.fr"],
       connectSrc: ["'self'"],
     },
   })
@@ -52,35 +52,46 @@ app.use(helmet.frameguard({ action: "sameorigin" }));
 app.use(helmet.xssFilter());
 
 // Serve static files
-app.use(express.static(__dirname+'/public'));
+app.use(express.static(__dirname + '/public'));
 
 
 // Middleware for parsing JSON and URL-encoded data
 app.use(express.json());
-app.use(express.urlencoded({extended : true}))
+app.use(express.urlencoded({ extended: true }))
 
 // Middleware for parsing cookies
 app.use(cookieParser());
-
-
+// Rate limiting to protect against brute force attacks and DoS
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+}));
+app.use(csrfProtection);
 // Set EJS as a template engine
 app.set("view engine", "ejs");
+
+
+const hashPassword =  (password) => {
+  const hash = bcrypt.hashSync(password, saltRounds)
+  console.log("hashed password", hash); // return hash
+  return hash;
+}
 
 const users = [
   {
     email: "example@etud.univ-ubs.fr",
     //password: "password123", // Exemple to do the demo
-    password: bcrypt.hashSync("password123", saltRounds), // This should be on the serverside
+    password: hashPassword("password123"),
   },
 ];
 
-// Rate limiting to protect against brute force attacks and DoS
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
-app.use(csrfProtection);
+const validateUser =  (user, password) => {
+  console.log("validating password", password, user.password)
+  return bcrypt.compareSync(password,  user.password)
+   
+}
+
+
 
 let Tokensarray = [];
 // (B) HOME PAGE - OPEN TO ALL
@@ -90,42 +101,42 @@ app.get("/", (req, res) => {
   Tokensarray.push(csrfToken)
   res.render("index", { csrfToken });
 });
- 
+
 // (D5) LOGIN ENDPOINT
-app.post("/api/v1/auth/user-auth", (req, res) => {
-  const { email, password, _csrf} = req.body;
+app.post("/api/v1/auth/user-auth",  (req, res) => {
+  const { email, password, _csrf } = req.body;
   //console.log(email);
   //console.log(password);
   //console.log(_csrf);
   const index = Tokensarray.indexOf(_csrf);
   // Verify CSRF token
-  if (index <0) {
+  if (index < 0) {
     return res.status(403).json({ message: "CSRF token mismatch" });
   }
   //Remove the used token from our array
-  Tokensarray = Tokensarray.filter(it =>it !=_csrf);
+  Tokensarray = Tokensarray.filter(it => it != _csrf);
   //console.log(Tokensarray)
+  console.log("searching email", email);
   // Find the user by matching the provided email
   const user = users.find((u) => u.email === email);
-
-  if (user) {
-    // Compare the provided password with the stored password
-    bcrypt.compare(password, user.password, (err, result) =>{
-      if (result) {
-        res.status(200).json({ message: "Authentication successful" });
-      } else {
-        res.status(401).json({ message: "Invalid email/password combination" });
+  console.log("password validation");
+  // check if the user email and password are correct
+  if (user  && validateUser(user, password)) {
+        console.log("user found and password ok");
+        // serve the dashboard page
+        res.sendFile(path.join(__dirname, "./public/dashboard.html"));
+        
+        return;
       }
-    });
-  }else {
-    res.status(401).json({ message: "User not found" });
-  }
-});
+    
+  res.status(401).json({ message: "Invalid credentials" });
+}
+);
 
 app.get("/dashboard", (req, res) => {
   // Render the dashboard page
   //res.render("dashboard");
-  res.sendFile(path.join(__dirname, "./public/dashboard.html")); 
+  res.sendFile(path.join(__dirname, "./public/dashboard.html"));
 });
 
 app.listen(port, () => {
