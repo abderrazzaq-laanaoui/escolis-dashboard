@@ -16,7 +16,6 @@ const saltRounds = 10; // Cost factor for the bcrypt algorithm
 // } = doubleCsrf();
 const rateLimit = require("express-rate-limit");
 
-const port = 8000;
 // (A) EXPRESS 
 const app = express();
 // express.use(session);
@@ -73,20 +72,19 @@ app.set("view engine", "ejs");
 
 const hashPassword =  (password) => {
   const hash = bcrypt.hashSync(password, saltRounds)
-  console.log("hashed password", hash); // return hash
+  //console.log("hashed password", hash); // return hash
   return hash;
 }
 
 const users = [
   {
     email: "example@etud.univ-ubs.fr",
-    //password: "password123", // Exemple to do the demo
     password: hashPassword("password123"),
   },
 ];
 
 const validateUser =  (user, password) => {
-  console.log("validating password", password, user.password)
+  console.log("validating password")//, password, user.password)
   return bcrypt.compareSync(password,  user.password)
    
 }
@@ -139,6 +137,7 @@ app.get("/dashboard", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/dashboard.html"));
 });
 
+const port = process.argv[2] || 3000; // Use the provided port or default to 3000
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-})
+    console.log(`Server is running on port ${port}`);
+});
